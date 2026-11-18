@@ -1,0 +1,353 @@
+{
+  "entities": {
+    "Worker": {
+      "title": "Worker",
+      "description": "Registered factory or workshop worker record matching the Khmer/Chinese HR roster schema.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the HR manager who owns this record.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "employeeCode": {
+          "type": "string",
+          "description": "Worker employee code (អត្តលេខ / 工号).",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "khmerName": {
+          "type": "string",
+          "description": "Worker full name in Khmer (ឈ្មោះខ្មែរ / 柬埔寨名).",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "englishName": {
+          "type": "string",
+          "description": "Worker full name in Latin/English (ឈ្មោះអង់គ្លេស / 英文名).",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "gender": {
+          "type": "string",
+          "description": "Worker gender (ភេទ / 性别).",
+          "enum": ["ប្រុស", "ស្រី"]
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "Date of birth (ថ្ងៃ ខែ ឆ្នាំ កំណើត / 出生日期).",
+          "minLength": 4,
+          "maxLength": 20
+        },
+        "nationalId": {
+          "type": "string",
+          "description": "National ID or Passport number (លេខលិខិតឆ្លងដែន-អត្តសញ្ញាណប័ណ្ណ / 身份证号).",
+          "maxLength": 64
+        },
+        "nssfNumber": {
+          "type": "string",
+          "description": "NSSF social security number (លេខអត្ត-ប-ស-ស / 保险号).",
+          "maxLength": 64
+        },
+        "team": {
+          "type": "string",
+          "description": "Production team or group (ក្រុម / 班组).",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number (លេខទូរស័ព្ទ / 电话号码).",
+          "maxLength": 32
+        },
+        "hireDate": {
+          "type": "string",
+          "description": "Start work date in YYYY-MM-DD format (ថ្ងៃចូលធ្វើការ / 入厂日期).",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "village": {
+          "type": "string",
+          "description": "Village (ភូមិ).",
+          "maxLength": 100
+        },
+        "commune": {
+          "type": "string",
+          "description": "Commune or Sangkat (ឃុំ/សង្កាត់).",
+          "maxLength": 100
+        },
+        "district": {
+          "type": "string",
+          "description": "District or Krong (ក្រុង/ស្រុក).",
+          "maxLength": 100
+        },
+        "province": {
+          "type": "string",
+          "description": "Province (ខេត្ត).",
+          "maxLength": 100
+        },
+        "workPermitNumber": {
+          "type": "string",
+          "description": "Work permit card number (លេខប័ណ្ណការងារ / 工作证卡号).",
+          "maxLength": 64
+        },
+        "employmentStatus": {
+          "type": "string",
+          "description": "Current employment status.",
+          "enum": ["active", "inactive"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "employeeCode",
+        "khmerName",
+        "englishName",
+        "gender",
+        "dateOfBirth",
+        "nationalId",
+        "nssfNumber",
+        "team",
+        "phone",
+        "hireDate",
+        "village",
+        "commune",
+        "district",
+        "province",
+        "workPermitNumber",
+        "employmentStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Contract": {
+      "title": "Contract",
+      "description": "Worker employment contract (60-day probation or 90-day full-time).",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the HR manager who owns this contract.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "workerId": {
+          "type": "string",
+          "description": "Document ID of the associated worker.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "workerName": {
+          "type": "string",
+          "description": "Denormalized worker display name.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "employeeCode": {
+          "type": "string",
+          "description": "Denormalized worker employee code.",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "team": {
+          "type": "string",
+          "description": "Denormalized team name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "contractType": {
+          "type": "string",
+          "description": "Contract category: 60-day probation or 90-day full-time.",
+          "enum": ["probation_60", "fulltime_90"]
+        },
+        "durationDays": {
+          "type": "integer",
+          "description": "Contract duration in days (60 for probation, 90 for full-time).",
+          "enum": [60, 90]
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Contract start date in YYYY-MM-DD format.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Contract expiration date in YYYY-MM-DD format.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "status": {
+          "type": "string",
+          "description": "Lifecycle status of the contract.",
+          "enum": ["active", "superseded", "terminated"]
+        },
+        "approvalStatus": {
+          "type": "string",
+          "description": "Approval workflow status (待审批 / 通过 / 不通过).",
+          "enum": ["pending_approval", "approved", "rejected"]
+        },
+        "englishName": {
+          "type": "string",
+          "description": "Denormalized worker English name.",
+          "maxLength": 120
+        },
+        "gender": {
+          "type": "string",
+          "description": "Denormalized worker gender.",
+          "enum": ["ប្រុស", "ស្រី"]
+        },
+        "hireDate": {
+          "type": "string",
+          "description": "Denormalized hire date in YYYY-MM-DD format.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional contract notes.",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "workerId",
+        "workerName",
+        "employeeCode",
+        "team",
+        "contractType",
+        "durationDays",
+        "startDate",
+        "endDate",
+        "status",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Work task or operational checklist item with unfinished task notifications.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the HR manager who owns this task.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "workerId": {
+          "type": "string",
+          "description": "Optional worker document ID if assigned to a specific worker.",
+          "maxLength": 128
+        },
+        "workerName": {
+          "type": "string",
+          "description": "Assignee worker name or empty for team-wide tasks.",
+          "maxLength": 120
+        },
+        "team": {
+          "type": "string",
+          "description": "Assigned team or department.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "title": {
+          "type": "string",
+          "description": "Task title.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "description": "Task details and instructions.",
+          "maxLength": 1000
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority level.",
+          "enum": ["high", "medium", "low"]
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Due date in YYYY-MM-DD format.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "status": {
+          "type": "string",
+          "description": "Completion state.",
+          "enum": ["pending", "in_progress", "completed", "archived"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "ownerId",
+        "workerId",
+        "workerName",
+        "team",
+        "title",
+        "description",
+        "priority",
+        "dueDate",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/workers/{workerId}": {
+      "schema": { "$ref": "#/entities/Worker" },
+      "description": "Collection of registered worker profiles and PII, isolated per ownerId."
+    },
+    "/contracts/{contractId}": {
+      "schema": { "$ref": "#/entities/Contract" },
+      "description": "Collection of worker contracts (60-day probation and 90-day full-time), linked to workerId and isolated per ownerId."
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Collection of worker/team tasks generating unfinished-work notifications, isolated per ownerId."
+    }
+  }
+}

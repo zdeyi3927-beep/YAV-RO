@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>កិច្ចសន្យាពេញសិទ្ធិ - 正式合同书</title>
+    <style>
+        /* A4 页面与字体基础设置 */
+        body {
+            font-family: 'Khmer OS Battambang', 'Hanuman', 'SimSun', '宋体', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+        }
+        .a4-document {
+            max-width: 210mm;
+            min-height: 297mm;
+            background: #fff;
+            margin: 0 auto;
+            padding: 15mm 20mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        /* 顶部两端对齐排版 */
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .header-left {
+            text-align: left;
+            line-height: 1.5;
+        }
+        .header-right {
+            text-align: center;
+            line-height: 1.5;
+        }
+        .doc-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        /* 基础表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        table td, table th {
+            border: 1px solid #000;
+            padding: 5px 8px;
+            vertical-align: middle;
+        }
+        
+        /* 员工信息表特有列宽 */
+        .emp-label {
+            width: 16%;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .emp-val {
+            width: 17%;
+            text-align: center;
+        }
+
+        /* 合同正文排版 */
+        .contract-body {
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: justify;
+        }
+        .clause {
+            margin-bottom: 8px;
+        }
+        .khmer-txt {
+            margin: 0 0 2px 0;
+        }
+        .chinese-txt {
+            margin: 0;
+        }
+
+        /* 薪资明细内部表格 */
+        .salary-table-container {
+            margin: 10px 0 10px 20px;
+        }
+        .salary-table {
+            width: 95%;
+            margin-bottom: 10px;
+        }
+        .salary-table th {
+            background-color: #f9f9f9;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        /* 底部签字区 */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .sign-block {
+            width: 30%;
+            line-height: 1.6;
+        }
+        .sign-space {
+            height: 60px;
+        }
+
+        /* 打印配置 */
+        @media print {
+            body {
+                background-color: transparent;
+                padding: 0;
+            }
+            .a4-document {
+                box-shadow: none;
+                margin: 0;
+                padding: 10mm 15mm;
+                width: 100%;
+            }
+            /* 防止条款被中途截断跨页 */
+            .clause, .salary-table-container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="a4-document">
+        
+        <!-- 头部公司与国家信息 -->
+        <div class="header-top">
+            <div class="header-left">
+                <div>ផាញ អាត អេន ក្រាហ្វ ឯ.ក</div>
+                <div>Pine arts and Crafts Company Limited</div>
+            </div>
+            <div class="header-right">
+                <div>ព្រះរាជាណាចក្រកម្ពុជា</div>
+                <div>ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+                <div>柬埔寨王国</div>
+                <div>民族宗教君主</div>
+            </div>
+        </div>
+
+        <!-- 标题 -->
+        <div class="doc-title">
+            <div>កិច្ចសន្យាពេញសិទ្ធិ</div>
+            <div>正式合同书</div>
+        </div>
+
+        <!-- 员工个人信息表格 -->
+        <table>
+            <tr>
+                <td class="emp-label">គោត្តនាមនឹងនាម<br>姓名</td>
+                <td class="emp-val">ចាន់ និវ័ន</td>
+                <td class="emp-label">ភេទ<br>性别</td>
+                <td class="emp-val">ស្រី</td>
+                <td class="emp-label">អាយុរ<br>年龄</td>
+                <td class="emp-val">32</td>
+            </tr>
+            <tr>
+                <td class="emp-label">ថ្ងៃខែឆ្នាំកណើត<br>出生日期</td>
+                <td class="emp-val">1994/7/4</td>
+                <td class="emp-label">កំរិតវប្បធម៌<br>学历</td>
+                <td class="emp-val"></td>
+                <td class="emp-label">អត្តលេខ<br>工号</td>
+                <td class="emp-val">2366</td>
+            </tr>
+            <tr>
+                <td class="emp-label">ថ្ងៃចូលធ្វើការ<br>进厂日期</td>
+                <td class="emp-val">2026/5/11</td>
+                <td class="emp-label">មុខងារ<br>职务</td>
+                <td class="emp-val">កាតស្លឹក</td>
+                <td class="emp-label">ប្រាក់បៀវត្សគោល<br>底薪</td>
+                <td class="emp-val">210</td>
+            </tr>
+            <tr>
+                <td class="emp-label">ទីលំនៅបច្ចុប្បន្ន<br>现居地址</td>
+                <td colspan="5">
+                    ឃុំ (乡/区): ហាន់ទ្វារ     
+                    ស្រក (县): ជ្រលង     
+                    ខេត្ត (省): បារាយណ៍
+                </td>
+            </tr>
+        </table>
+
+        <!-- 合同正文条款 -->
+        <div class="contract-body">
+            <div class="clause">
+                <p class="khmer-txt">ក្រុមហ៊ុនសូមបញ្ជាក់ជូនកម្មកររូបនេះ ពិតជាបានឆ្លងកាត់ការងារសាកល្បងជោគជ័យមែន ចាប់ពីពេលនេះតទៅក្រុមហ៊ុនចាត់ទុកជាកម្មករពេញសិទ្ធិរបស់ក្រុមហ៊ុន ហើយធ្វើកិច្ចសន្យាការងារពេញសិទ្ធិជាមួយក្រុមហ៊ុន កិច្ចសន្យាមួយដងមានរយះ៣ខែដែលមានខ្លឹមសារដូចខាងក្រោមៈ</p>
+                <p class="chinese-txt">本公司在此证实此员工已顺利的通过试用期,从现在开始转为本公司的正式员工,与公司签下工作正式合同书,一次合约期限3个月,及在合同期间的底薪以及其他内容如下</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">១. រយះពេលធ្វើកិច្ចសន្យា ៣ ខែ រយះពេលមានប្រសិទ្ធិភាពចាប់ពីឆ្នាំ 2026 ខែ 7 ទី 10 ដល់ឆ្នាំ 2026 ខែ 10 ទី 10</p>
+                <p class="chinese-txt">一、正式合约期为3个月,从 2026 年 7 月 10 日起至 2026 年 10 月 10 日止</p>
+                
+                <!-- 薪资明细表容器 -->
+                <div class="salary-table-container">
+                    <p class="khmer-txt">លក្ខ័ខណ្ឌច្បាប់ 法定項目:</p>
+                    <table class="salary-table">
+                        <tr>
+                            <th>ធាតុ項目</th>
+                            <th>ការទូទាត់ 金額</th>
+                            <th>ចំណាំ 備註</th>
+                        </tr>
+                        <tr>
+                            <td>កុងត្រាកម្មករប្រាក់បៀវត្សគោល<br>底薪</td>
+                            <td>តាមការប្រកាសរបស់រដ្ឋាភិបាល<br>依据政府法定公告</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់មកទៀងទាត់<br>出勤津贴</td>
+                            <td>១០ ដុល្លារ<br>10 美元</td>
+                            <td>អវត្តមាននឹងត្រូវកាត់តាមអត្រា<br>未出勤将依考勤记录按比例减扣</td>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់ឧបត្ថម្ភអាហារ<br>用餐津贴</td>
+                            <td>០.៥ ដុល្លារ<br>0.5 美元</td>
+                            <td>ដោយផ្អែកលើថ្ងៃធ្វើការជាក់ស្តែង<br>依实际上工日数核发</td>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់សោហ៊ុយធ្វើដំណើរ/ការស្នាក់នៅ<br>交通或住宿津贴</td>
+                            <td>ធ្វើតាមការប្រកាសរបស់រដ្ឋាភិបាល<br>依据政府法定公告</td>
+                            <td></td>
+                        </tr>
+                    </table>
+
+                    <p class="khmer-txt">លក្ខខណ្ឌបន្ថែម 其他项目:</p>
+                    <table class="salary-table">
+                        <tr>
+                            <th>ធាតុ項目</th>
+                            <th>ការទូទាត់ 金額</th>
+                            <th>ចំណាំ 備註</th>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់ឧបត្ថម្ភមុខតំណែង<br>职务津贴</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់ឧបត្ថម្ភជំនាញ<br>技术津贴</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់ឧបត្ថម្ភអាហារ<br>用餐津贴</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>ប្រាក់ឧបត្ថម្ភផ្សេងទៀត<br>其他津贴</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <p class="khmer-txt">រីឯប្រាក់បៀវត្ស នឹងត្រូវបើកចំនួនពីរលើក លើកទី១បើកនៅថ្ងៃទី២៥ និងលើកទី២បើកនៅថ្ងៃងទី១០( បើចំថ្ងៃអាទិត្យ ថ្ងៃបុណ្យជាតិអាចបើកមុន១ថ្ងៃ)</p>
+                <p class="chinese-txt">员工薪资将分两次发放,在每月២៥号及១០日发放。(如遇状况,可提前或延后一天)。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">២. ក្នុងអំឡុងពេលធ្វើការអោយក្រុមហ៊ុន ភាពទទួលខុសត្រូវការងារ ការងារដែលត្រូវផ្លាស់ប្តូរផ្នែក រឺផ្លាស់ប្តូរមុខតំណែងគឺអាស្រ័យទៅលើក្រុមហ៊ុន រឺប្រធានដឹកនាំជាអ្នករៀបចំ ប្រសិនគ្មានហេតុផលសមរម្យត្រូវព្រមទទួល និងសហការណ៍។</p>
+                <p class="chinese-txt">二、为公司工作期间,职务责任和所有作业改动或调任部门依据公司或领导安排,无合理情况下须接受配合。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៣. ក្នុងមួយថ្ងៃធ្វើការ៨ម៉ោង មួយសប្តាហ៍ធ្វើការ៤៨ម៉ោង បើថែមម៉ោងកម្មករនឹងទទួលបានប្រាក់បន្ថែមម៉ោងគិតតាមច្បាប់ក្រសួងការងារ ។</p>
+                <p class="chinese-txt">三. 每天上班时间为8小时,一星期为48小时,如赶货加班时员工可获得按劳工法规定的加班费。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៤. កិច្ចសន្យាជិតផុតកំណត់ ក្រុមហ៊ុននឹងជំរាបជូនដំណឹងមុន៧ថ្ងៃអោយកម្មករដឹងពីពេលកំណត់កិច្ចសន្យា ប្រសិនបើក្រុមហ៊ុនមិនបន្តកិច្ចសន្យាថ្មីជាមួយកម្មករនិយោជិតទេ នោះក្រុមហ៊ុននឹងបើកប្រាក់បៀវត្សជូននូវប្រាក់បៀវត្សដែលត្រូវបើក(គិតទាំងប្រាក់បៀវត្សសរុបមានសំណង៥%) ក្រៅពីនេះកម្មករនិយោជិត មិនអាចទាមទារសំណងអ្វីផ្សេងចំពោះក្រុមហ៊ុនឡើយ ។</p>
+                <p class="chinese-txt">四. 工作合约快要到期之前,公司将提前7天通知员工有关到期合约事宜,如公司不继续约,除应得的工资外(含总工资5%之补偿),终止合约时公司将不做任何補偿。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៥. កម្មករនិយោជិតដែលចូលថ្មីរឺឆ្លងកាតកម្មករនិយោជិតឆ្លងកាត់សាកល្បង ប្រាក់ខែត្រូវកំណត់តាមច្បាប់ស្តីពីក្រសួងការងារនៃព្រះរាជាណាចក្រកម្ពុជា</p>
+                <p class="chinese-txt">五. 所有新进或已过试用期之员工,薪资全部都以柬埔寨劳工法规定计算处理。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៦. កម្មករត្រូវចេញចូលធ្វើការអោយទៀងពេល មានបញ្ហាមិនបានមកធ្វើការ មកយឺត រឺ ត្រូវចេញមុនម៉ោងត្រូវប្រាប់អ្នកគ្រប់គ្រងអោយដាក់ច្បាប់ ហើយត្រូវមានក្រដាស់ច្បាប់ត្រឹមត្រូវ មិនដូចច្នោះទេមានន័យថាឈប់អត់ច្បាប់ បើឈប់អត់ច្បាប់បីថ្ងៃជាប់គ្នា ចាត់ទុកថាបោះបង់ចោលការងារ។</p>
+                <p class="chinese-txt">六. 员工需按时出勤,有事不能上班或不能按时上下班时需向相关负责人请假,并且要有请假条,否则视为旷工。连续矿工三天视为自动离职。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៧. កម្មករត្រូវគោរពច្បាប់ស្តីពីក្រសួងការងារនិងច្បាប់ផ្ទៃក្នុងរបស់ក្រុមហ៊ុន បើប្រព្រឹត្តិល្មើសពីច្បាប់ស្តីពីក្រសួងការងារ មិនគោរពតាមខ្លឹមសារក្នុងកិច្ចសន្យា រឺប្រព្រឹត្តិល្មើសច្បាប់រោងចក្រចំនួន៣ដងនិងត្រូវចេញលិខិតព្រមាន ក្រុមហ៊ុនមានសិទ្ធិបញ្ឈប់ពីការងារហើយព្រមទាំងលុបចោលនូវកិច្ចសន្យា បើប្រព្រឹត្តិល្មើសច្បាប់រោងចក្រធ្ងន់ធ្ងរ(ត្រូវក្រុមហ៊ុនបញ្ឈប់ការងារ) ក្រៅពីប្រាក់បៀវត្សការងារគ្មានសំណងអ្វីទាំងអស់ ។</p>
+                <p class="chinese-txt">七. 员工须遵守劳工法及内部规章,违反劳工法、不遵守合约里有关规定或违反三次厂规者並开警告信,公司有权利开除及解除雇用合约,如严重违反厂规(被公司开除),除已工作薪资外不做任何补偿。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៨. ក្រុមហ៊ុនស្នើអោយកម្មករថែមម៉ោង គឺធ្វើទៅតាមការយល់ព្រមពីភាគីទាំងសងខាង កម្មករថែមម៉ោងវេនព្រឹកថែមម៉ោង: ធម្មតាគិតប្រាក់ខែគោល/២៦/8*ចំនួនថែមម៉ោង*១,៥ ចំពោះធ្វើការថ្ងៃបុណ្យជាតិ រឺ ថ្ងៃអាទិត្យគិតប្រាក់ខែគោល/២៦/៨*ចំនួនថែមម៉ោង*២ ។ កម្មករថែមវេនយល់ : ប្រាក់ខែគោល/២៦/ *ចំនួនថែមម៉ោង*២ ចំពោះធ្វើការថ្ងៃបុណ្យជាតិ រឺ ថ្ងៃអាទិត្យគិតប្រាក់ខែគោល/២៦/៨*ចំនួនថែមម៉ោង*២ ។</p>
+                <p class="chinese-txt">八. 公司可以要求员工加班,依照双方一致同意,白班员工加班:普通加班费以底薪/26/8×加班时数×1.5倍,假日或星期天加班以底薪/26/8×加班时数×2倍。夜班员工加班:除普通加班费以底薪/26/8×加班时数×2倍以外,其余国定假日与星期天加班费以底薪/26/8×加班时数×2倍计算。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">៩. ប្រសិនកម្មកររងរបួសការងារ រឺ នៅពេលធ្វើដំណើរមកធ្វើការប្រទះគ្រោះថ្នាក់ចរាចរណ៏ ក្រុមហ៊ុនធានារ៉ាប់រងនិងទទួលខុសត្រូវទាំងស្រង់ចំពោះប្រាក់ខែនិងថ្លៃព្យាបាល ។</p>
+                <p class="chinese-txt">九. 员工如在工作时及上班途中发生意外,保险公司将负责一切医疗费及薪资。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">១០. កម្មករមានយោបល់អ្វីមួយត្រូវសរសេរជាលាយលក្ខណ៍អក្សររួចទំនាក់ទំនងទៅផ្នែកគ្រប់គ្រង ហើយផ្នែកគ្រប់គ្រងនឹងដោះស្រាយជូនក្នុងអំឡុងពេល១០ថ្ងៃ។ បើកម្មករចូលរួមធ្វើកូដកម្មមិនស្រមច្បាប់ ក្រុមហ៊ុនមានសិទ្ធិបញ្ឈប់ពីការងារ ក្រៅពីប្រាក់បៀវត្សការងារ ក្រុមហ៊ុនមិនមានសំណងអ្វីផ្សេងទៀតទេ។</p>
+                <p class="chinese-txt">十. 员工有任何建议应向管理部书面陈情沟通,管理部于10天内作出合理回应,若员工参与不合法罢工,公司有权开除,除已工作薪资外不做任何补偿。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">១១. កម្មករមិនអាចបករឿងសំងាត់ទាក់ទងនឹងការងារក្រុមហ៊ុនឡើយ មិនចូលរួមកិច្ចការនយោបាយផ្សេងៗ ។</p>
+                <p class="chinese-txt">十一. 员工不可泄露任何关于该公司业务机密的信息,不进行任何政治的活动。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">១២. បើកម្មករយល់ព្រមនិងទទួលយកនូវច្បាប់នៃប្រការនីមួយៗ,នឹងត្រូវផ្តល់ឯកសារពិតប្រាកដល់រោងចក្រសូមយក(អត្តសញ្ញានប័ណ្ណ,សៀវភៅគ្រួសារ,សំបុត្រកំណើត ច្បាប់ដើមពិតប្រាកដ),សូមចុះហត្ថលេខានិងផ្តិតមេដៃស្តាំទុក ជាភស្តុតាង ។</p>
+                <p class="chinese-txt">十二. 如员工理解、同意并接受以上所有条款规定,并且请确认提供给工厂(身份证、户口薄、出生证明真实有效的证件)请签字并印上手印为证。</p>
+            </div>
+
+            <div class="clause">
+                <p class="khmer-txt">១៣. កិច្ចសន្យាដើមមិនមានខ្លឹមសារទាំងស្រុង សូមយោងទៅតាមបទបញ្ជាផ្ទៃក្នុង សៀវភៅណែនាំកម្មករ រឺច្បាប់ស្តីពីការងារបស់ប្រទេស ៕</p>
+                <p class="chinese-txt">十三. 本合约未尽之事宜,请参照本公司厂纪厂规,员工指引守则、及国家劳动法。</p>
+            </div>
+        </div>
+
+        <!-- 底部签名区 -->
+        <div class="signatures">
+            <div class="sign-block">
+                <div>ហត្ថលេខា ឬ ស្នាមមេដៃកម្មករ (ភាគីខ)</div>
+                <div>乙方员工签字</div>
+                <div class="sign-space"></div>
+            </div>
+            
+            <div class="sign-block">
+                <div>ធ្វើនៅថ្ងៃទី 10 ខែ 7 ឆ្នាំ 2026</div>
+                <div>于 2026 年 7 月 10 日</div>
+                <div class="sign-space"></div>
+            </div>
+
+            <div class="sign-block">
+                <div>ហត្ថលេខាក្រុមហ៊ុន (ភាគី ក)</div>
+                <div>甲方工厂签字</div>
+                <div class="sign-space"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

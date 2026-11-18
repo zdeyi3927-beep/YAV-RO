@@ -1,0 +1,6 @@
+{
+  "name": "Workforce HR — ប្រព័ន្ធគ្រប់គ្រងកម្មករ",
+  "description": "ប្រព័ន្ធគ្រប់គ្រងការចុះឈ្មោះកម្មករ កុងត្រាសាកល្បង ៦០ ថ្ងៃ និងពេញសិទ្ធិ ៩០ ថ្ងៃ ព្រមទាំងការជូនដំណឹងអំពីការងារមិនទាន់រួចរាល់",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

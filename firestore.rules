@@ -1,0 +1,272 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny all access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Hardened Primitives ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'zdeyi3927@gmail.com';
+    }
+
+    // --- Validation Blueprints ---
+    function isValidWorker(data) {
+      return data.keys().hasAll([
+          'ownerId', 'employeeCode', 'khmerName', 'englishName', 'gender',
+          'dateOfBirth', 'nationalId', 'nssfNumber', 'team', 'phone',
+          'hireDate', 'village', 'commune', 'district', 'province',
+          'workPermitNumber', 'employmentStatus', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'employeeCode', 'khmerName', 'englishName', 'gender',
+          'dateOfBirth', 'nationalId', 'nssfNumber', 'team', 'phone',
+          'hireDate', 'village', 'commune', 'district', 'province',
+          'workPermitNumber', 'employmentStatus', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && (data.ownerId == request.auth.uid || isAdmin())
+        && data.employeeCode is string && data.employeeCode.size() >= 1 && data.employeeCode.size() <= 32 && data.employeeCode.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.khmerName is string && data.khmerName.size() >= 1 && data.khmerName.size() <= 120
+        && data.englishName is string && data.englishName.size() >= 1 && data.englishName.size() <= 120
+        && data.gender in ['ប្រុស', 'ស្រី']
+        && data.dateOfBirth is string && data.dateOfBirth.size() >= 4 && data.dateOfBirth.size() <= 20
+        && data.nationalId is string && data.nationalId.size() <= 64
+        && data.nssfNumber is string && data.nssfNumber.size() <= 64
+        && data.team is string && data.team.size() >= 1 && data.team.size() <= 80
+        && data.phone is string && data.phone.size() <= 32
+        && data.hireDate is string && data.hireDate.size() == 10 && data.hireDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.village is string && data.village.size() <= 100
+        && data.commune is string && data.commune.size() <= 100
+        && data.district is string && data.district.size() <= 100
+        && data.province is string && data.province.size() <= 100
+        && data.workPermitNumber is string && data.workPermitNumber.size() <= 64
+        && data.employmentStatus in ['active', 'inactive']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidContract(data) {
+      return data.keys().hasAll([
+          'ownerId', 'workerId', 'workerName', 'employeeCode', 'team',
+          'contractType', 'durationDays', 'startDate', 'endDate', 'status',
+          'notes', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'workerId', 'workerName', 'employeeCode', 'team',
+          'contractType', 'durationDays', 'startDate', 'endDate', 'status',
+          'notes', 'createdAt', 'updatedAt',
+          'englishName', 'gender', 'hireDate', 'approvalStatus'
+        ])
+        && isValidId(data.ownerId)
+        && (data.ownerId == request.auth.uid || isAdmin())
+        && isValidId(data.workerId)
+        && data.workerName is string && data.workerName.size() >= 1 && data.workerName.size() <= 120
+        && data.employeeCode is string && data.employeeCode.size() >= 1 && data.employeeCode.size() <= 32 && data.employeeCode.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.team is string && data.team.size() >= 1 && data.team.size() <= 80
+        && ((data.contractType == 'probation_60' && data.durationDays == 60) || (data.contractType == 'fulltime_90' && data.durationDays == 90))
+        && data.startDate is string && data.startDate.size() == 10 && data.startDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.endDate is string && data.endDate.size() == 10 && data.endDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.status in ['active', 'superseded', 'terminated']
+        && data.notes is string && data.notes.size() <= 500
+        && (!('englishName' in data) || (data.englishName is string && data.englishName.size() <= 120))
+        && (!('gender' in data) || data.gender in ['ប្រុស', 'ស្រី'])
+        && (!('hireDate' in data) || (data.hireDate is string && data.hireDate.size() == 10 && data.hireDate.matches('^\\d{4}-\\d{2}-\\d{2}$')))
+        && (!('approvalStatus' in data) || data.approvalStatus in ['pending_approval', 'approved', 'rejected'])
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll([
+          'ownerId', 'workerId', 'workerName', 'team', 'title',
+          'description', 'priority', 'dueDate', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'workerId', 'workerName', 'team', 'title',
+          'description', 'priority', 'dueDate', 'status', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && (data.ownerId == request.auth.uid || isAdmin())
+        && data.workerId is string && data.workerId.size() <= 128 && (data.workerId == '' || isValidId(data.workerId))
+        && data.workerName is string && data.workerName.size() <= 120
+        && data.team is string && data.team.size() >= 1 && data.team.size() <= 80
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.description is string && data.description.size() <= 1000
+        && data.priority in ['high', 'medium', 'low']
+        && data.dueDate is string && data.dueDate.size() == 10 && data.dueDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.status in ['pending', 'in_progress', 'completed', 'archived']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Workers Collection (PII Protected) ---
+    match /workers/{workerId} {
+      allow get: if isSignedIn() && isValidId(workerId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn()
+        && isValidId(workerId)
+        && isValidWorker(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(workerId)
+        && isValidWorker(incoming())
+        && (existing().ownerId == request.auth.uid || isAdmin())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            // Action: Edit Worker Profile Details
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'employeeCode', 'khmerName', 'englishName', 'gender', 'dateOfBirth',
+              'nationalId', 'nssfNumber', 'team', 'phone', 'hireDate',
+              'village', 'commune', 'district', 'province', 'workPermitNumber', 'updatedAt'
+            ])
+          )
+          || (
+            // Action: Toggle Employment Status
+            incoming().diff(existing()).affectedKeys().hasOnly(['employmentStatus', 'updatedAt'])
+          )
+        );
+
+      allow delete: if isSignedIn() && isValidId(workerId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    // --- Contracts Collection (60-day Probation & 90-day Full-Time) ---
+    match /contracts/{contractId} {
+      allow get: if isSignedIn() && isValidId(contractId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn()
+        && isValidId(contractId)
+        && isValidContract(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/workers/$(incoming().workerId))
+        && getAfter(/databases/$(database)/documents/workers/$(incoming().workerId)).data.ownerId == incoming().ownerId;
+
+      allow update: if isSignedIn()
+        && isValidId(contractId)
+        && isValidContract(incoming())
+        && (existing().ownerId == request.auth.uid || isAdmin())
+        && incoming().ownerId == existing().ownerId
+        && incoming().workerId == existing().workerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            // Terminal State Locking: superseded, terminated, approved, or rejected contracts cannot be modified by non-admins
+            existing().status == 'active'
+            && (!('approvalStatus' in existing()) || existing().approvalStatus == 'pending_approval')
+            && (
+              // Action: Approve or Reject Contract
+              (
+                incoming().approvalStatus in ['approved', 'rejected']
+                && incoming().diff(existing()).affectedKeys().hasOnly([
+                  'approvalStatus', 'status', 'notes', 'updatedAt',
+                  'englishName', 'gender', 'hireDate'
+                ])
+              )
+              || (
+                // Action: Supersede or Terminate Contract
+                incoming().status in ['superseded', 'terminated']
+                && incoming().diff(existing()).affectedKeys().hasOnly([
+                  'status', 'approvalStatus', 'notes', 'updatedAt'
+                ])
+              )
+              || (
+                // Action: Update Contract Dates/Type/Notes while active
+                incoming().diff(existing()).affectedKeys().hasOnly([
+                  'contractType', 'durationDays', 'startDate', 'endDate', 'notes', 'updatedAt'
+                ])
+              )
+            )
+          )
+        );
+
+      allow delete: if isSignedIn() && isValidId(contractId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    // --- Tasks Collection (Unfinished Task Notifications) ---
+    match /tasks/{taskId} {
+      allow get: if isSignedIn() && isValidId(taskId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn()
+        && isValidId(taskId)
+        && isValidTask(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          incoming().workerId == ''
+          || (
+            existsAfter(/databases/$(database)/documents/workers/$(incoming().workerId))
+            && getAfter(/databases/$(database)/documents/workers/$(incoming().workerId)).data.ownerId == incoming().ownerId
+          )
+        );
+
+      allow update: if isSignedIn()
+        && isValidId(taskId)
+        && isValidTask(incoming())
+        && (existing().ownerId == request.auth.uid || isAdmin())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().workerId == ''
+          || (
+            existsAfter(/databases/$(database)/documents/workers/$(incoming().workerId))
+            && getAfter(/databases/$(database)/documents/workers/$(incoming().workerId)).data.ownerId == incoming().ownerId
+          )
+        )
+        && (
+          isAdmin()
+          || (
+            // Terminal State Locking: archived tasks cannot be modified by non-admins
+            existing().status != 'archived'
+            && (
+              // Action: Update Task Status
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+              || (
+                // Action: Edit Task Details
+                incoming().diff(existing()).affectedKeys().hasOnly([
+                  'workerId', 'workerName', 'team', 'title', 'description',
+                  'priority', 'dueDate', 'status', 'updatedAt'
+                ])
+              )
+            )
+          )
+        );
+
+      allow delete: if isSignedIn() && isValidId(taskId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+  }
+}

@@ -1,0 +1,866 @@
+' ============= 主程序：刷新合同数据 =============
+Sub RefreshContracts()
+    Dim wsSrc As Worksheet, wsDest As Worksheet
+    Dim lastRow As Long, i As Long
+    Dim destRow As Long
+    Dim empId As String, entryDate As Date
+    Dim contractCount As Long
+    
+    ' 设置工作表
+    Set wsSrc = ThisWorkbook.Worksheets("Sheet1")
+    Set wsDest = ThisWorkbook.Worksheets("Sheet2")
+    
+    ' 清空Sheet2原有数据（保留标题）
+    wsDest.Cells.Clear
+    Call CreateHeaders(wsDest)
+    
+    ' 获取Sheet1最后一行
+    lastRow = wsSrc.Cells(wsSrc.Rows.count, 1).End(xlUp).row
+    destRow = 2
+    contractCount = 0
+    
+    ' 循环处理每个员工
+    For i = 2 To lastRow
+        empId = Trim(wsSrc.Cells(i, 1).Value) ' A列：工号
+        
+        If empId <> "" Then
+            ' 检查入厂日期
+            If IsDate(wsSrc.Cells(i, 10).Value) Then
+                entryDate = CDate(wsSrc.Cells(i, 10).Value)
+                
+                ' 生成合同并写入Sheet2
+                Call GenerateAndWriteContracts(wsSrc, wsDest, i, empId, entryDate, destRow, contractCount)
+            End If
+        End If
+    Next i
+    
+    ' 格式化表格
+    Call FormatContractSheet(wsDest, destRow - 1)
+    
+    ' 更新25天内到期合同计数
+    Call UpdateExpiringCount(wsDest)
+    
+    MsgBox "合同数据刷新完成！共生成 " & contractCount & " 份合同", vbInformation
+End Sub
+
+' ============= 创建标题行 =============
+Private Sub CreateHeaders(ws As Worksheet)
+    With ws
+        .Cells(1, 1).Value = "工号 "
+        .Cells(1, 2).Value = "柬埔寨名 "
+        .Cells(1, 3).Value = "英文名 "
+        .Cells(1, 4).Value = "性别 "
+        .Cells(1, 5).Value = "入厂日期 "
+        .Cells(1, 6).Value = "入职年份 "
+        .Cells(1, 7).Value = "合同类型"
+        .Cells(1, 8).Value = "开始日期 "
+        .Cells(1, 9).Value = "结束日期 "
+        .Cells(1, 10).Value = "审批状态 "
+        .Cells(1, 11).Value = "操作 "
+        
+        ' 设置标题行格式
+        .Rows(1).Font.Bold = True
+        .Rows(1).Interior.Color = RGB(240, 240, 240)
+        .Rows(1).HorizontalAlignment = xlCenter
+    End With
+End Sub
+
+' ============= 生成并写入合同 =============
+Private Sub GenerateAndWriteContracts(wsSrc As Worksheet, wsDest As Worksheet, _
+                                      srcRow As Long, empId As String, _
+                                      startDate As Date, ByRef destRow As Long, _
+                                      ByRef contractCount As Long)
+    
+    Dim currentStart As Date, currentEnd As Date
+    Dim finalEnd As Date
+    Dim contractType As String
+    Dim contractIndex As Integer
+    Dim khName As String, enName As String, gender As String
+    Dim entryYear As Integer
+    
+    ' 获取员工基本信息
+    khName = wsSrc.Cells(srcRow, 2).Value
+    enName = wsSrc.Cells(srcRow, 3).Value
+    gender = wsSrc.Cells(srcRow, 4).Value
+    entryYear = year(startDate)
+    
+    finalEnd = CDate(TARGET_END)
+    contractIndex = 0
+    
+    ' 第一段合同：试用期60天
+    currentStart = startDate
+    currentEnd = DateAdd("d", 60, currentStart)
+    If currentEnd > finalEnd Then currentEnd = finalEnd
+    
+    ' 循环生成所有合同段
+    Do While currentStart < finalEnd
+        contractIndex = contractIndex + 1
+        
+        ' 确定合同类型
+        If contractIndex = 1 Then
+            contractType = "试用期(60天)"
+        Else
+            contractType = "续签合同(90天)"
+        End If
+        
+        ' 写入Sheet2
+        wsDest.Cells(destRow, 1).Value = empId
+        wsDest.Cells(destRow, 2).Value = khName
+        wsDest.Cells(destRow, 3).Value = enName
+        wsDest.Cells(destRow, 4).Value = gender
+        wsDest.Cells(destRow, 5).Value = startDate
+        wsDest.Cells(destRow, 6).Value = entryYear
+        wsDest.Cells(destRow, 7).Value = contractType
+        wsDest.Cells(destRow, 8).Value = currentStart
+        wsDest.Cells(destRow, 9).Value = currentEnd
+        wsDest.Cells(destRow, 10).Value = "待审批"
+        wsDest.Cells(destRow, 11).Value = "请选择操作"
+        
+        contractCount = contractCount + 1
+        destRow = destRow + 1
+        
+        ' 准备下一段合同
+        currentStart = DateAdd("d", 1, currentEnd)
+        If currentStart >= finalEnd Then Exit Do
+        currentEnd = DateAdd("d", 90, currentStart)
+        If currentEnd > finalEnd Then currentEnd = finalEnd
+    Loop
+End Sub
+
+' ============= 格式化合同表格 =============
+Private Sub FormatContractSheet(ws As Worksheet, lastRow As Long)
+    Dim r As Long
+    Dim daysLeft As Integer
+    
+    ' 设置边框
+    With ws.Range("A1:K" & lastRow)
+        .Borders.LineStyle = xlContinuous
+        .Borders.Weight = xlThin
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+    End With
+    
+    ' 设置日期列格式
+    ws.Range("E:E,H:I").NumberFormat = "yyyy-mm-dd"
+    
+    ' 根据审批状态和到期天数设置颜色
+    For r = 2 To lastRow
+        ' 根据审批状态设置颜色
+        Select Case ws.Cells(r, 10).Value
+            Case "通过"
+                ws.Rows(r).Font.Color = RGB(0, 128, 0)
+            Case "不通过"
+                ws.Rows(r).Font.Color = RGB(255, 0, 0)
+                ws.Rows(r).Font.Strikethrough = True
+            Case "待审批"
+                ws.Rows(r).Font.Color = RGB(255, 128, 0)
+                ws.Rows(r).Font.Bold = True
+        End Select
+        
+        ' 检查是否25天内到期
+        If IsDate(ws.Cells(r, 9).Value) Then
+            daysLeft = DateDiff("d", Date, CDate(ws.Cells(r, 9).Value))
+            If daysLeft >= 0 And daysLeft <= 25 Then
+                ' 根据剩余天数设置不同深浅的红色背景
+                Select Case daysLeft
+                    Case 0 To 7
+                        ws.Rows(r).Interior.Color = RGB(255, 200, 200)
+                    Case 8 To 15
+                        ws.Rows(r).Interior.Color = RGB(255, 220, 220)
+                    Case 16 To 25
+                        ws.Rows(r).Interior.Color = RGB(255, 240, 240)
+                End Select
+                
+                ' 在操作列添加提示
+                ws.Cells(r, 11).Value = "?? " & daysLeft & "天后到期"
+            End If
+        End If
+    Next r
+    
+    ' 自动调整列宽
+    ws.Columns("A:K").AutoFit
+    ' 设置操作列稍宽一些
+    ws.Columns("K").ColumnWidth = 15
+End Sub
+
+' ============= 更新25天内到期合同计数 =============
+Private Sub UpdateExpiringCount(ws As Worksheet)
+    Dim lastRow As Long, r As Long
+    Dim daysLeft As Integer
+    Dim count As Integer
+    
+    lastRow = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    count = 0
+    
+    For r = 2 To lastRow
+        If ws.Cells(r, 10).Value <> "不通过" Then
+            If IsDate(ws.Cells(r, 9).Value) Then
+                daysLeft = DateDiff("d", Date, CDate(ws.Cells(r, 9).Value))
+                If daysLeft >= 0 And daysLeft <= 25 Then
+                    count = count + 1
+                End If
+            End If
+        End If
+    Next r
+    
+    ' 在表格上方显示计数
+    ws.Range("A1").Value = "合同续签审批 (25天内到期: " & count & "份)"
+End Sub
+
+' ============= 审批通过 =============
+Sub ApproveContract()
+    Dim ws As Worksheet
+    Dim r As Long
+    Dim empId As String
+    Dim currentEnd As Date, newStart As Date, newEnd As Date
+    Dim lastRow As Long
+    Dim answer As VbMsgBoxResult
+    
+    Set ws = ThisWorkbook.Worksheets("Sheet2")
+    r = ActiveCell.row
+    
+    ' 检查是否选中有效行
+    If r < 2 Then
+        MsgBox "请选中一条合同记录！", vbExclamation
+        Exit Sub
+    End If
+    
+    empId = Trim(ws.Cells(r, 1).Value)
+    If empId = "" Then
+        MsgBox "请选中有效的合同记录！", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 检查是否为待审批状态
+    If ws.Cells(r, 10).Value <> "待审批" Then
+        MsgBox "只有待审批的合同可以进行此操作！", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 确认操作
+    answer = MsgBox("确定要通过这份合同吗？", vbYesNo + vbQuestion)
+    If answer = vbNo Then Exit Sub
+    
+    ' 检查结束日期
+    If Not IsDate(ws.Cells(r, 9).Value) Then
+        MsgBox "结束日期格式错误！", vbCritical
+        Exit Sub
+    End If
+    
+    ' 更新当前合同状态
+    ws.Cells(r, 10).Value = "通过"
+    ws.Cells(r, 11).Value = "已通过"
+    ws.Rows(r).Font.Color = RGB(0, 128, 0)
+    ws.Rows(r).Font.Bold = False
+    
+    ' 生成新合同
+    currentEnd = CDate(ws.Cells(r, 9).Value)
+    
+    If currentEnd < CDate(TARGET_END) Then
+        newStart = DateAdd("d", 1, currentEnd)
+        newEnd = DateAdd("d", 90, newStart)
+        If newEnd > CDate(TARGET_END) Then newEnd = CDate(TARGET_END)
+        
+        lastRow = ws.Cells(ws.Rows.count, 1).End(xlUp).row + 1
+        
+        ' 复制员工信息并添加新合同
+        ws.Cells(lastRow, 1).Value = ws.Cells(r, 1).Value
+        ws.Cells(lastRow, 2).Value = ws.Cells(r, 2).Value
+        ws.Cells(lastRow, 3).Value = ws.Cells(r, 3).Value
+        ws.Cells(lastRow, 4).Value = ws.Cells(r, 4).Value
+        ws.Cells(lastRow, 5).Value = ws.Cells(r, 5).Value
+        ws.Cells(lastRow, 6).Value = ws.Cells(r, 6).Value
+        ws.Cells(lastRow, 7).Value = "续签合同(90天)"
+        ws.Cells(lastRow, 8).Value = newStart
+        ws.Cells(lastRow, 9).Value = newEnd
+        ws.Cells(lastRow, 10).Value = "待审批"
+        ws.Cells(lastRow, 11).Value = "待审批"
+        
+        ' 格式化新行
+        ws.Rows(lastRow).Font.Color = RGB(255, 128, 0)
+        ws.Rows(lastRow).Font.Bold = True
+    End If
+    
+    ' 重新格式化表格
+    Call FormatContractSheet(ws, ws.Cells(ws.Rows.count, 1).End(xlUp).row)
+    Call UpdateExpiringCount(ws)
+    
+    MsgBox "? 审批通过！已生成下一份合同。", vbInformation
+End Sub
+
+' ============= 审批不通过 =============
+Sub RejectContract()
+    Dim ws As Worksheet
+    Dim r As Long
+    Dim empId As String
+    Dim answer As VbMsgBoxResult
+    
+    Set ws = ThisWorkbook.Worksheets("Sheet2")
+    r = ActiveCell.row
+    
+    ' 检查是否选中有效行
+    If r < 2 Then
+        MsgBox "请选中一条合同记录！", vbExclamation
+        Exit Sub
+    End If
+    
+    empId = Trim(ws.Cells(r, 1).Value)
+    If empId = "" Then
+        MsgBox "请选中有效的合同记录！", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 检查是否为待审批状态
+    If ws.Cells(r, 10).Value <> "待审批" Then
+        MsgBox "只有待审批的合同可以进行此操作！", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 确认操作
+    answer = MsgBox("确定不通过这份合同吗？员工将不再续签。", vbYesNo + vbQuestion + vbDefaultButton2)
+    If answer = vbNo Then Exit Sub
+    
+    ' 更新状态
+    ws.Cells(r, 10).Value = "不通过"
+    ws.Cells(r, 11).Value = "不续签"
+    ws.Rows(r).Font.Color = RGB(255, 0, 0)
+    ws.Rows(r).Font.Strikethrough = True
+    ws.Rows(r).Font.Bold = False
+    
+    ' 重新格式化表格
+    Call FormatContractSheet(ws, ws.Cells(ws.Rows.count, 1).End(xlUp).row)
+    Call UpdateExpiringCount(ws)
+    
+    MsgBox "? 已标记为不通过，员工不再续签。", vbInformation
+End Sub
+
+' ============= 按月份查询到期合同 =============
+Sub QueryExpiryByMonth()
+    Dim ws As Worksheet
+    Dim monthYear As String
+    Dim year As Integer, month As Integer
+    Dim startDate As Date, endDate As Date
+    Dim lastRow As Long, r As Long
+    Dim resultRow As Long
+    Dim found As Boolean
+    
+    Set ws = ThisWorkbook.Worksheets("Sheet2")
+    
+    ' 获取用户输入的月份
+    monthYear = InputBox("请输入要查询的年月 (格式: YYYY-MM)" & vbCrLf & _
+                         "例如: 2026-03", "按月查询")
+    If monthYear = "" Then Exit Sub
+    
+    ' 解析年月
+    On Error Resume Next
+    year = CInt(Split(monthYear, "-")(0))
+    month = CInt(Split(monthYear, "-")(1))
+    On Error GoTo 0
+    
+    If year = 0 Or month = 0 Or month < 1 Or month > 12 Then
+        MsgBox "输入格式错误！请使用 YYYY-MM 格式", vbExclamation
+        Exit Sub
+    End If
+    
+    ' 计算查询范围
+    startDate = DateSerial(year, month, 1)
+    endDate = DateSerial(year, month + 1, 0)
+    
+    ' 创建结果工作表
+    Dim resultWs As Worksheet
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    Set resultWs = ThisWorkbook.Worksheets("到期查询结果")
+    If Not resultWs Is Nothing Then
+        resultWs.Delete
+    End If
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    
+    Set resultWs = Worksheets.Add(After:=Worksheets(Worksheets.count))
+    resultWs.Name = "到期查询结果"
+    
+    ' 创建标题
+    With resultWs
+        .Cells(1, 1).Value = "序号"
+        .Cells(1, 2).Value = "工号"
+        .Cells(1, 3).Value = "柬埔寨名"
+        .Cells(1, 4).Value = "英文名"
+        .Cells(1, 5).Value = "性别"
+        .Cells(1, 6).Value = "开始日期"
+        .Cells(1, 7).Value = "结束日期"
+        .Cells(1, 8).Value = "剩余天数"
+        .Rows(1).Font.Bold = True
+        .Rows(1).Interior.Color = RGB(240, 240, 240)
+    End With
+    
+    lastRow = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    resultRow = 2
+    found = False
+    
+    ' 遍历查找到期合同
+    For r = 2 To lastRow
+        If ws.Cells(r, 10).Value <> "不通过" Then
+            If IsDate(ws.Cells(r, 9).Value) Then
+                If CDate(ws.Cells(r, 9).Value) >= startDate And _
+                   CDate(ws.Cells(r, 9).Value) <= endDate Then
+                    
+                    found = True
+                    resultWs.Cells(resultRow, 1).Value = resultRow - 1
+                    resultWs.Cells(resultRow, 2).Value = ws.Cells(r, 1).Value
+                    resultWs.Cells(resultRow, 3).Value = ws.Cells(r, 2).Value
+                    resultWs.Cells(resultRow, 4).Value = ws.Cells(r, 3).Value
+                    resultWs.Cells(resultRow, 5).Value = ws.Cells(r, 4).Value
+                    resultWs.Cells(resultRow, 6).Value = ws.Cells(r, 8).Value
+                    resultWs.Cells(resultRow, 7).Value = ws.Cells(r, 9).Value
+                    resultWs.Cells(resultRow, 8).Value = DateDiff("d", Date, CDate(ws.Cells(r, 9).Value))
+                    
+                    resultRow = resultRow + 1
+                End If
+            End If
+        End If
+    Next r
+    
+    If found Then
+        resultWs.Columns("A:H").AutoFit
+        resultWs.Range("A1:H" & resultRow - 1).Borders.LineStyle = xlContinuous
+        MsgBox "查询完成！共找到 " & (resultRow - 2) & " 条到期合同记录。", vbInformation
+    Else
+        MsgBox "该月份没有找到到期合同。", vbInformation
+        Application.DisplayAlerts = False
+        resultWs.Delete
+        Application.DisplayAlerts = True
+    End If
+End Sub
+
+' ============= 显示25天内到期合同 =============
+Sub ShowExpiringContracts()
+    Dim ws As Worksheet
+    Dim lastRow As Long, r As Long
+    Dim daysLeft As Integer
+    Dim resultRow As Long
+    
+    Set ws = ThisWorkbook.Worksheets("Sheet2")
+    lastRow = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    
+    ' 创建结果工作表
+    Dim resultWs As Worksheet
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    Set resultWs = ThisWorkbook.Worksheets("25天内到期")
+    If Not resultWs Is Nothing Then
+        resultWs.Delete
+    End If
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    
+    Set resultWs = Worksheets.Add(After:=Worksheets(Worksheets.count))
+    resultWs.Name = "25天内到期"
+    
+    ' 创建标题
+    With resultWs
+        .Cells(1, 1).Value = "序号"
+        .Cells(1, 2).Value = "工号"
+        .Cells(1, 3).Value = "柬埔寨名"
+        .Cells(1, 4).Value = "英文名"
+        .Cells(1, 5).Value = "性别"
+        .Cells(1, 6).Value = "开始日期"
+        .Cells(1, 7).Value = "结束日期"
+        .Cells(1, 8).Value = "剩余天数"
+        .Rows(1).Font.Bold = True
+        .Rows(1).Interior.Color = RGB(240, 240, 240)
+    End With
+    
+    resultRow = 2
+    
+    ' 遍历查找25天内到期的合同
+    For r = 2 To lastRow
+        If ws.Cells(r, 10).Value <> "不通过" Then
+            If IsDate(ws.Cells(r, 9).Value) Then
+                daysLeft = DateDiff("d", Date, CDate(ws.Cells(r, 9).Value))
+                
+                If daysLeft >= 0 And daysLeft <= 25 Then
+                    resultWs.Cells(resultRow, 1).Value = resultRow - 1
+                    resultWs.Cells(resultRow, 2).Value = ws.Cells(r, 1).Value
+                    resultWs.Cells(resultRow, 3).Value = ws.Cells(r, 2).Value
+                    resultWs.Cells(resultRow, 4).Value = ws.Cells(r, 3).Value
+                    resultWs.Cells(resultRow, 5).Value = ws.Cells(r, 4).Value
+                    resultWs.Cells(resultRow, 6).Value = ws.Cells(r, 8).Value
+                    resultWs.Cells(resultRow, 7).Value = ws.Cells(r, 9).Value
+                    resultWs.Cells(resultRow, 8).Value = daysLeft
+                    
+                    ' 根据剩余天数设置颜色
+                    Select Case daysLeft
+                        Case 0 To 7
+                            resultWs.Rows(resultRow).Interior.Color = RGB(255, 200, 200)
+                        Case 8 To 15
+                            resultWs.Rows(resultRow).Interior.Color = RGB(255, 220, 220)
+                        Case 16 To 25
+                            resultWs.Rows(resultRow).Interior.Color = RGB(255, 240, 240)
+                    End Select
+                    
+                    resultRow = resultRow + 1
+                End If
+            End If
+        End If
+    Next r
+    
+    If resultRow > 2 Then
+        resultWs.Columns("A:H").AutoFit
+        resultWs.Range("A1:H" & resultRow - 1).Borders.LineStyle = xlContinuous
+        MsgBox "共找到 " & (resultRow - 2) & " 份25天内到期的合同。", vbInformation
+    Else
+        MsgBox "没有找到25天内到期的合同。", vbInformation
+        Application.DisplayAlerts = False
+        resultWs.Delete
+        Application.DisplayAlerts = True
+    End If
+End Sub
+
+' ============= 合同到期导出（按班组分Sheet） =============
+Sub ExportExpiringContracts()
+    Dim ws1 As Worksheet, ws2 As Worksheet
+    Dim lastRow As Long, i As Long
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim teamDict As Object
+    Dim teamName As String
+    Dim rowNum As Long
+    Dim empId As String
+    Dim foundRow As Range
+    Dim currentYear As Integer, currentMonth As Integer
+    Dim contractDate As Date
+    Dim sheetCount As Integer
+    Dim item As Variant
+    Dim key As Variant
+    Dim totalCount As Long
+    
+    ' 设置工作表
+    Set ws1 = ThisWorkbook.Worksheets("Sheet1")
+    Set ws2 = ThisWorkbook.Worksheets("Sheet2")
+    
+    ' 当前年月
+    currentYear = year(Date)
+    currentMonth = month(Date)
+    
+    ' 创建字典存储班组数据
+    Set teamDict = CreateObject("Scripting.Dictionary")
+    
+    ' 遍历Sheet2
+    lastRow = ws2.Cells(ws2.Rows.count, 1).End(xlUp).row
+    
+    For i = 2 To lastRow
+        ' 只处理待审批的合同
+        If ws2.Cells(i, 10).Value = "待审批" Then
+            ' 检查结束日期
+            If IsDate(ws2.Cells(i, 9).Value) Then
+                contractDate = CDate(ws2.Cells(i, 9).Value)
+                
+                ' 检查是否当前月份
+                If year(contractDate) = currentYear And month(contractDate) = currentMonth Then
+                    ' 获取工号
+                    empId = Trim(ws2.Cells(i, 1).Value)
+                    
+                    ' 查找班组
+                    teamName = "其他"
+                    Set foundRow = ws1.Columns(1).Find(empId, LookAt:=xlWhole)
+                    If Not foundRow Is Nothing Then
+                        If ws1.Cells(foundRow.row, 8).Value <> "" Then
+                            teamName = ws1.Cells(foundRow.row, 8).Value
+                        End If
+                    End If
+                    
+                    ' 保存数据到字典
+                    If Not teamDict.exists(teamName) Then
+                        Set teamDict(teamName) = New Collection
+                    End If
+                    
+                    ' 保存数据
+                    Dim data(1 To 8) As Variant
+                    data(1) = ws2.Cells(i, 1).Value  ' 工号
+                    data(2) = ws2.Cells(i, 2).Value  ' 柬埔寨名
+                    data(3) = ws2.Cells(i, 3).Value  ' 英文名
+                    data(4) = teamName                ' 部门
+                    data(5) = ws2.Cells(i, 5).Value  ' 入职日期
+                    data(6) = ws2.Cells(i, 9).Value  ' 结束日期
+                    data(7) = DateAdd("d", 60, CDate(ws2.Cells(i, 5).Value)) ' 转正日期
+                    data(8) = DateAdd("d", 90, CDate(ws2.Cells(i, 9).Value)) ' 新合同到期日
+                    
+                    teamDict(teamName).Add data
+                End If
+            End If
+        End If
+    Next i
+    
+    ' 检查是否有数据
+    If teamDict.count = 0 Then
+        MsgBox "当前月份没有待审批的到期合同。", vbInformation
+        Exit Sub
+    End If
+    
+    ' 创建新工作簿
+    Set wb = Workbooks.Add
+    
+    ' 删除多余的Sheet，只保留一个
+    Application.DisplayAlerts = False
+    Do While wb.Worksheets.count > 1
+        wb.Worksheets(wb.Worksheets.count).Delete
+    Loop
+    Application.DisplayAlerts = True
+    
+    sheetCount = 0
+    totalCount = 0
+    
+    ' 遍历每个班组
+    For Each key In teamDict.keys
+        sheetCount = sheetCount + 1
+        
+        ' 添加新Sheet
+        If sheetCount > 1 Then
+            wb.Worksheets.Add After:=wb.Worksheets(wb.Worksheets.count)
+        End If
+        
+        Set ws = wb.Worksheets(sheetCount)
+        
+        ' Sheet名称（最多31个字符）
+        If Len(key) > 31 Then
+            ws.Name = Left(key, 28) & "..."
+        Else
+            ws.Name = key
+        End If
+        
+        ' 写入标题
+        With ws
+            .Cells(1, 1).Value = "序号"
+            .Cells(1, 2).Value = "工号"
+            .Cells(1, 3).Value = "柬埔寨名"
+            .Cells(1, 4).Value = "英文名"
+            .Cells(1, 5).Value = "部门"
+            .Cells(1, 6).Value = "入职日期"
+            .Cells(1, 7).Value = "转正日期"
+            .Cells(1, 8).Value = "续签日期"
+            .Cells(1, 9).Value = "合同到期日"
+            .Cells(1, 10).Value = "合同续签期限"
+            .Cells(1, 11).Value = "本人确认续签"
+            .Cells(1, 12).Value = "主管确认续签"
+            .Cells(1, 13).Value = "备注"
+            
+            ' 标题格式
+            .Rows(1).Font.Bold = True
+            .Rows(1).Interior.Color = RGB(240, 240, 240)
+            .Rows(1).HorizontalAlignment = xlCenter
+        End With
+        
+        ' 写入数据
+        rowNum = 2
+        For Each item In teamDict(key)
+            ws.Cells(rowNum, 1).Value = rowNum - 1
+            ws.Cells(rowNum, 2).Value = item(1)
+            ws.Cells(rowNum, 3).Value = item(2)
+            ws.Cells(rowNum, 4).Value = item(3)
+            ws.Cells(rowNum, 5).Value = item(4)
+            ws.Cells(rowNum, 6).Value = item(5)
+            ws.Cells(rowNum, 7).Value = item(7)
+            ws.Cells(rowNum, 8).Value = item(6)
+            ws.Cells(rowNum, 9).Value = item(8)
+            ws.Cells(rowNum, 10).Value = "3个月"
+            ws.Cells(rowNum, 11).Value = ""
+            ws.Cells(rowNum, 12).Value = ""
+            ws.Cells(rowNum, 13).Value = ""
+            
+            ' 设置日期格式
+            ws.Range("F" & rowNum & ":I" & rowNum).NumberFormat = "yyyy-mm-dd"
+            
+            rowNum = rowNum + 1
+            totalCount = totalCount + 1
+        Next item
+        
+        ' 设置边框
+        ws.Range("A1:M" & (rowNum - 1)).Borders.LineStyle = xlContinuous
+        ws.Range("A1:M" & (rowNum - 1)).Borders.Weight = xlThin
+        ws.Range("A1:M" & (rowNum - 1)).HorizontalAlignment = xlCenter
+        ws.Range("A1:M" & (rowNum - 1)).VerticalAlignment = xlCenter
+        
+        ' 设置列宽
+        ws.Columns("A").ColumnWidth = 8
+        ws.Columns("B").ColumnWidth = 12
+        ws.Columns("C").ColumnWidth = 20
+        ws.Columns("D").ColumnWidth = 15
+        ws.Columns("E").ColumnWidth = 15
+        ws.Columns("F").ColumnWidth = 12
+        ws.Columns("G").ColumnWidth = 12
+        ws.Columns("H").ColumnWidth = 12
+        ws.Columns("I").ColumnWidth = 12
+        ws.Columns("J").ColumnWidth = 12
+        ws.Columns("K").ColumnWidth = 15
+        ws.Columns("L").ColumnWidth = 15
+        ws.Columns("M").ColumnWidth = 15
+        
+        ' 设置打印格式
+        With ws.PageSetup
+            .Orientation = xlLandscape
+            .PaperSize = xlPaperA4
+            .FitToPagesWide = 1
+            .Zoom = False
+            .PrintTitleRows = "$1:$1"
+        End With
+        
+        ' 添加本组合计
+        ws.Cells(rowNum, 1).Value = "本组合计："
+        ws.Cells(rowNum, 2).Value = (rowNum - 2) & " 人"
+        ws.Cells(rowNum, 1).Font.Bold = True
+        ws.Cells(rowNum, 2).Font.Bold = True
+    Next key
+    
+    ' 添加汇总Sheet
+    Set ws = wb.Worksheets.Add(Before:=wb.Worksheets(1))
+    ws.Name = "汇总"
+    
+    With ws
+        .Cells(1, 1).Value = "合同到期汇总表"
+        .Cells(1, 1).Font.Bold = True
+        .Cells(1, 1).Font.Size = 16
+        .Range("A1:C1").Merge
+        .Range("A1:C1").HorizontalAlignment = xlCenter
+        
+        .Cells(3, 1).Value = "导出月份："
+        .Cells(3, 2).Value = currentYear & "年" & currentMonth & "月"
+        .Cells(3, 1).Font.Bold = True
+        
+        .Cells(4, 1).Value = "导出时间："
+        .Cells(4, 2).Value = Format(Now, "yyyy-mm-dd hh:mm:ss")
+        .Cells(4, 1).Font.Bold = True
+        
+        .Cells(5, 1).Value = "总合同数："
+        .Cells(5, 2).Value = totalCount & " 份"
+        .Cells(5, 1).Font.Bold = True
+        
+        .Cells(7, 1).Value = "班组"
+        .Cells(7, 2).Value = "人数"
+        .Cells(7, 1).Font.Bold = True
+        .Cells(7, 2).Font.Bold = True
+        .Cells(7, 1).Interior.Color = RGB(240, 240, 240)
+        .Cells(7, 2).Interior.Color = RGB(240, 240, 240)
+        
+        rowNum = 8
+        For Each key In teamDict.keys
+            .Cells(rowNum, 1).Value = key
+            .Cells(rowNum, 2).Value = teamDict(key).count
+            rowNum = rowNum + 1
+        Next key
+        
+        .Cells(rowNum, 1).Value = "总计"
+        .Cells(rowNum, 2).Value = totalCount
+        .Cells(rowNum, 1).Font.Bold = True
+        .Cells(rowNum, 2).Font.Bold = True
+        
+        .Columns("A:B").AutoFit
+        .Range("A7:B" & rowNum).Borders.LineStyle = xlContinuous
+    End With
+    
+    ' 激活第一个数据Sheet
+    wb.Worksheets(2).Activate
+    
+    MsgBox "? 导出成功！" & vbCrLf & _
+           "共 " & totalCount & " 份合同" & vbCrLf & _
+           "按 " & teamDict.count & " 个班组分Sheet保存。", vbInformation
+End Sub
+
+' ============= 获取员工部门 =============
+Private Function GetDepartment(empId As String) As String
+    Dim ws As Worksheet
+    Dim lastRow As Long, i As Long
+    
+    Set ws = ThisWorkbook.Worksheets("Sheet1")
+    lastRow = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    
+    For i = 2 To lastRow
+        If Trim(ws.Cells(i, 1).Value) = Trim(empId) Then
+            GetDepartment = ws.Cells(i, 8).Value ' H列：班组
+            Exit Function
+        End If
+    Next i
+    
+    GetDepartment = "未分配"
+End Function
+
+' ============= 添加快捷操作按钮 =============
+Sub AddButtons()
+    Dim ws As Worksheet
+    Dim btn As Button
+    
+    Set ws = ThisWorkbook.Worksheets("Sheet2")
+    
+    ' 删除原有按钮
+    On Error Resume Next
+    For Each btn In ws.Buttons
+        btn.Delete
+    Next btn
+    On Error GoTo 0
+    
+    ' 添加刷新按钮
+    Set btn = ws.Buttons.Add(ws.Range("M1").Left, ws.Range("M1").Top, 100, 25)
+    With btn
+        .Caption = "刷新合同"
+        .OnAction = "RefreshContracts"
+        .Font.Size = 10
+        .Font.Bold = True
+    End With
+    
+    ' 添加审批通过按钮
+    Set btn = ws.Buttons.Add(ws.Range("M2").Left, ws.Range("M2").Top, 100, 25)
+    With btn
+        .Caption = "审批通过"
+        .OnAction = "ApproveContract"
+        .Font.Size = 10
+    End With
+    
+    ' 添加审批不通过按钮
+    Set btn = ws.Buttons.Add(ws.Range("M3").Left, ws.Range("M3").Top, 100, 25)
+    With btn
+        .Caption = "审批不通过"
+        .OnAction = "RejectContract"
+        .Font.Size = 10
+    End With
+    
+    ' 添加按月查询按钮
+    Set btn = ws.Buttons.Add(ws.Range("M4").Left, ws.Range("M4").Top, 100, 25)
+    With btn
+        .Caption = "按月查询"
+        .OnAction = "QueryExpiryByMonth"
+        .Font.Size = 10
+    End With
+    
+    ' 添加25天内到期按钮
+    Set btn = ws.Buttons.Add(ws.Range("M5").Left, ws.Range("M5").Top, 100, 25)
+    With btn
+        .Caption = "25天内到期"
+        .OnAction = "ShowExpiringContracts"
+        .Font.Size = 10
+    End With
+    
+    ' 添加导出本月合同按钮
+    Set btn = ws.Buttons.Add(ws.Range("M6").Left, ws.Range("M6").Top, 100, 25)
+    With btn
+        .Caption = "导出本月合同"
+        .OnAction = "ExportExpiringContracts"
+        .Font.Size = 10
+        .Font.Bold = True
+    End With
+    
+    ' 设置按钮区域格式
+    ws.Range("M1:M7").ColumnWidth = 15
+    ws.Range("M1:M7").HorizontalAlignment = xlCenter
+    ws.Range("M1:M7").VerticalAlignment = xlCenter
+    ws.Range("M1:M7").Font.Bold = True
+    ws.Range("M1").Value = "操作面板"
+End Sub
+
+' ============= 初始化系统 =============
+Sub InitializeSystem()
+    Call RefreshContracts
+    Call AddButtons
+    MsgBox "系统初始化完成！", vbInformation
+End Sub
+
+
